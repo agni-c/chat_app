@@ -17,7 +17,7 @@ const ChatPage = () => {
         display="flex"
         justifyContent="space-between"
         w="100%"
-        h="100vh"
+        h="92vh"
         p="10px"
       >
         {user && (
