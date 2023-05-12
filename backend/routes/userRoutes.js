@@ -9,7 +9,7 @@ const router = express.Router()
 
 router
 	.route('/')
-	.get(protect, allUsers) // get user api
+	.get(protect, allUsers) // get user api (search users)
 	.post(registerUser) // register user api
 
 router.post('/login', authUser)

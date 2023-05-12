@@ -14,6 +14,7 @@ import {
   MenuDivider,
   Input,
   useToast,
+  Spinner,
 } from '@chakra-ui/react';
 import {
   Drawer,
@@ -28,9 +29,11 @@ import {
 import React, { useState } from 'react';
 import { BellIcon, ChevronDownIcon } from '@chakra-ui/icons';
 import { ChatState } from './../../context/ChatProvider';
-import ProfileModal from './../ProfileModal';
+import ProfileModal from '../../Features/UserAvatar/ProfileModal';
 import { useHistory } from 'react-router-dom';
-import ChatLoading from '../ChatLoading';
+import ChatLoading from '../../Features/Chat/ChatLoading';
+import axios from 'axios';
+import UserListItem from '../../Features/UserAvatar/UserListItem';
 
 const SideDrawer = () => {
   const [search, setSearch] = useState('');
@@ -38,7 +41,7 @@ const SideDrawer = () => {
   const [loading, setLoading] = useState(false);
   const [loadingChat, setLoadingChat] = useState();
 
-  const { user } = ChatState();
+  const { selectedChat, setSelectedChat, user, chats, setChats } = ChatState();
   const history = useHistory();
   const btnRef = React.useRef();
   const toast = useToast();
@@ -69,15 +72,16 @@ const SideDrawer = () => {
       };
 
       const { data } = await axios.get(
-        `/api/user/search?name=${search}`,
+        `/api/users?search=${search}&limit=10`,
         config
       );
+
       setSearchResult(data);
       setLoading(false);
     } catch (err) {
       toast({
         title: 'Error Occurred',
-        description: 'Failed to search results',
+        description: err.message,
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -85,6 +89,33 @@ const SideDrawer = () => {
       });
     }
   };
+  const accessChat = async (userId) => {
+    try {
+      setLoadingChat(true);
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user.token}`,
+        },
+      };
+
+      const { data } = await axios.post(`/api/chat`, { userId }, config);
+      if (!chats.find((chat) => chat._id === data._id))
+        setChats([data, ...chats]);
+      setSelectedChat(data);
+      setLoadingChat(false);
+    } catch (error) {
+      toast({
+        title: 'Error fetching the chat',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'bottom-left',
+      });
+    }
+  };
+
   return (
     <>
       <Box
@@ -122,6 +153,7 @@ const SideDrawer = () => {
                 cursor="pointer"
                 name={user.name}
                 src={user.pic}
+                mr={2}
               />
             </MenuButton>
             <MenuList>
@@ -156,15 +188,19 @@ const SideDrawer = () => {
               />
               <Button onClick={handleSearch}>Go</Button>
             </Box>
-            {loading ? <ChatLoading /> : <span>results</span>}
+            {loading ? (
+              <ChatLoading />
+            ) : (
+              searchResult.map((contact) => (
+                <UserListItem
+                  key={contact._id}
+                  contact={contact}
+                  handleFunction={() => accessChat(contact._id)}
+                />
+              ))
+            )}
+            {loadingChat && <Spinner ml="auto" display="flex" />}
           </DrawerBody>
-
-          <DrawerFooter>
-            <Button variant="outline" mr={3} onClick={onClose}>
-              Cancel
-            </Button>
-            <Button colorScheme="blue">Save</Button>
-          </DrawerFooter>
         </DrawerContent>
       </Drawer>
     </>

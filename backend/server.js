@@ -31,8 +31,10 @@ app.get('/', (req, res) => {
 // routes
 const userRoutes = require('./routes/userRoutes.js')
 const chatRoutes = require('./routes/chatRoutes.js')
+const messageRoutes = require('./routes/messageRoutes.js')
 app.use('/api/users', userRoutes)
 app.use('/api/chat', chatRoutes)
+app.use('/api/message', messageRoutes)
 
 // middleWare
 const { notFound, errorHandler } = require('./middleware/errorMiddleWare.js')
