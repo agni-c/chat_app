@@ -43,6 +43,19 @@ app.use(errorHandler)
 
 const PORT = process.env.PORT
 
-app.listen(PORT, () =>
+const server = app.listen(PORT, () =>
 	console.log(`Server running on port http://localhost:${PORT}`.cyan)
 )
+const io = require('socket.io')(server, {
+  cors: {
+    origin: 'http://localhost:3000'
+  },
+  pingTimeout: 60000
+})
+
+io.on('connection', socket => {
+  console.log('a user connected')
+  socket.on('disconnect', () => {
+    console.log('user disconnected')
+  })
+})

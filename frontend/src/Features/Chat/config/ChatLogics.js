@@ -10,7 +10,7 @@ export const isSameSender = (messages, currMessage, messageIndex, userId) => {
   return (
 		messageIndex < messages.length - 1 && // if not last message
 		// if next message from different sender or next message  not undefined
-		(messages[i + 1].sender._id !== currMessage.sender._id ||
+		(messages[messageIndex + 1].sender._id !== currMessage.sender._id ||
 			messages[messageIndex + 1].sender._id !== undefined) &&
 		// if not current user
 		messages[messageIndex].sender._id !== userId
