@@ -39,7 +39,7 @@ const allMessages = expressAsyncHandler(async (req, res) => {
     const messages = await Message.find({ chat: req.params.chatId })
 			.populate('sender', 'name pic email')
 			.populate('chat')
-			.sort({ createdAt: -1 })
+			.sort({ createdAt: 1 })
 
     res.json(messages)
   } catch (error) {

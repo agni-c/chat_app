@@ -39,8 +39,8 @@ const MyChats = ({ fetchAgain, setFetchAgain }) => {
   };
 
   useEffect(() => {
-    console.log('users', JSON.parse(localStorage.getItem('userInfo')));
-    console.log('users State', user);
+    // console.log('users', JSON.parse(localStorage.getItem('userInfo')));
+    // console.log('users State', user);
     setLoggedUser(JSON.parse(localStorage.getItem('userInfo')));
 
     fetchChats();

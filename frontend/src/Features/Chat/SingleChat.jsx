@@ -11,13 +11,29 @@ import { set } from 'mongoose';
 import axios from 'axios';
 import { useEffect } from 'react';
 import ScrollableChat from './ScrollableChat';
+import { io } from 'socket.io-client';
+
+const ENDPOINT = 'http://localhost:5000';
+let selectedChatCompare;
+const socket = io(ENDPOINT);
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [socketConnected, setSocketConnected] = useState(false);
   const { selectedChat, setSelectedChat, user, chats, setChats } = ChatState();
   const toast = useToast();
+
+  useEffect(() => {
+    // initial connections
+    socket.emit('setup', user);
+    console.log('socket connected');
+
+    socket.on('connection', () => {
+      setSocketConnected(true);
+    });
+  }, []);
 
   const sendMessage = async (e) => {
     if (e.key === 'Enter') {
@@ -41,6 +57,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           },
           config
         );
+        socket.emit('new message', data);
         setMessages([...messages, data]);
       } catch (error) {
         console.log({ error });
@@ -75,7 +92,12 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       );
       setMessages(data);
       setLoading(false);
-      console.log({ messages });
+
+      // console.log({ messages });
+
+      socket.emit('join chat', selectedChat._id);
+      // what if it is a personal chat not a group chat?
+      // no it this connection implementation is only for single chat component.
     } catch (error) {
       toast({
         title: 'An error occurred.',
@@ -89,7 +111,27 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 
   useEffect(() => {
     fetchMessages();
+
+    selectedChatCompare = selectedChat; // backup selected chat
   }, [selectedChat]);
+
+  useEffect(() => {
+    socket.on('message received', (newMessageReceived) => {
+      console.log('new message received');
+      console.log({ selectedChatCompare, selectedChat });
+      console.log({ newMessageReceived });
+      if (!selectedChat) return;
+      if (
+        !selectedChatCompare ||
+        selectedChatCompare._id !== selectedChat._id
+      ) {
+        // give notification
+      } else {
+        setMessages((messages) => [...messages, newMessageReceived]);
+      }
+    });
+  }, [selectedChat]);
+
   return (
     <>
       <Box

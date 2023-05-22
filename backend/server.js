@@ -46,6 +46,7 @@ const PORT = process.env.PORT
 const server = app.listen(PORT, () =>
 	console.log(`Server running on port http://localhost:${PORT}`.cyan)
 )
+
 const io = require('socket.io')(server, {
   cors: {
     origin: 'http://localhost:3000'
@@ -55,7 +56,33 @@ const io = require('socket.io')(server, {
 
 io.on('connection', socket => {
   console.log('a user connected')
+
+	// on: disconnect
   socket.on('disconnect', () => {
     console.log('user disconnected')
+  })
+
+	// on: initial setup
+  socket.on('setup', userData => {
+    socket.join(userData._id) // personal room
+    console.log('user joined room', userData._id)
+    socket.emit('connected') // connected signal
+  })
+
+	// on: join chat
+  socket.on('join chat', room => {
+    socket.join(room) // room is chatId
+    console.log('joined room ', room)
+  })
+
+	// on: new message
+  socket.on('new message', newMessageRecieved => {
+    var chat = newMessageRecieved.chat
+    if (!chat.users) return console.log('chat.users not defined')
+    chat.users.forEach(user => {
+      if (user._id == newMessageRecieved.sender._id) return
+			// in: sends message to a room
+      socket.in(user._id).emit('message received', newMessageRecieved) // sending message to our personal room
+    })
   })
 })
