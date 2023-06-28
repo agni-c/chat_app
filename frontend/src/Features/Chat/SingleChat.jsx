@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { ChatState } from '../../context/ChatProvider';
 import { Box, Text, Spinner, FormControl } from '@chakra-ui/react';
 import { IconButton, Input, useToast } from '@chakra-ui/react';
@@ -6,17 +7,10 @@ import { ArrowBackIcon } from '@chakra-ui/icons';
 import { getSender, getSenderName } from '../Chat/config/ChatLogics';
 import ProfileModal from '../UserAvatar/ProfileModal';
 import UpdateGroupChatModal from './UpdateGroupChatModal';
-import { useState } from 'react';
-import { set } from 'mongoose';
-import axios from 'axios';
-import { useEffect } from 'react';
 import ScrollableChat from './ScrollableChat';
-import { io } from 'socket.io-client';
+import { socket } from './config/socket-connection';
 
-const ENDPOINT = 'http://localhost:5000';
 let selectedChatCompare;
-const socket = io(ENDPOINT);
-
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -33,8 +27,31 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     socket.on('connection', () => {
       setSocketConnected(true);
     });
+    socket.on('message received', handleNewMessage);
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
+  useEffect(() => {
+    fetchMessages();
+    selectedChatCompare = selectedChat; // backup selected chat
+  }, [selectedChat]);
+
+  const handleNewMessage = (newMessageReceived) => {
+    console.log({ newMessageReceived });
+    if (
+      !selectedChatCompare ||
+      selectedChatCompare._id !== newMessageReceived.chat._id
+    ) {
+      // give notification
+      console.log('new message received but not in this chat');
+      console.log({ selectedChatCompare, selectedChat });
+    } else {
+      setMessages((messages) => [...messages, newMessageReceived]);
+    }
+  };
   const sendMessage = async (e) => {
     if (e.key === 'Enter') {
       if (newMessage.trim() === '') return;
@@ -57,8 +74,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           },
           config
         );
+
+        setMessages((messages) => [...messages, data]);
         socket.emit('new message', data);
-        setMessages([...messages, data]);
       } catch (error) {
         console.log({ error });
         toast({
@@ -97,7 +115,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 
       socket.emit('join chat', selectedChat._id);
       // what if it is a personal chat not a group chat?
-      // no it this connection implementation is only for single chat component.
+      // ans. no it this connection implementation is only for single chat component.
     } catch (error) {
       toast({
         title: 'An error occurred.',
@@ -108,29 +126,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       });
     }
   };
-
-  useEffect(() => {
-    fetchMessages();
-
-    selectedChatCompare = selectedChat; // backup selected chat
-  }, [selectedChat]);
-
-  useEffect(() => {
-    socket.on('message received', (newMessageReceived) => {
-      console.log('new message received');
-      console.log({ selectedChatCompare, selectedChat });
-      console.log({ newMessageReceived });
-      if (!selectedChat) return;
-      if (
-        !selectedChatCompare ||
-        selectedChatCompare._id !== selectedChat._id
-      ) {
-        // give notification
-      } else {
-        setMessages((messages) => [...messages, newMessageReceived]);
-      }
-    });
-  }, [selectedChat]);
 
   return (
     <>
@@ -207,7 +202,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
               )}
 
               {/* messages */}
-              <FormControl onKeyDown={sendMessage} isRequired mt={3}>
+              <FormControl onKeyUp={sendMessage} isRequired mt={3}>
                 <Input
                   variant={'filled'}
                   bg={'#E0E0E0'}

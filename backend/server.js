@@ -37,7 +37,10 @@ app.use('/api/chat', chatRoutes)
 app.use('/api/message', messageRoutes)
 
 // middleWare
-const { notFound, errorHandler } = require('./middleware/errorMiddleWare.js')
+const {
+	notFound,
+	errorHandler
+} = require('./middleware/errorMiddleWare.js')
 app.use(notFound)
 app.use(errorHandler)
 
@@ -65,7 +68,7 @@ io.on('connection', socket => {
 	// on: initial setup
   socket.on('setup', userData => {
     socket.join(userData._id) // personal room
-    console.log('user joined room', userData._id)
+    console.log('user joined room', { userData })
     socket.emit('connected') // connected signal
   })
 
@@ -79,10 +82,21 @@ io.on('connection', socket => {
   socket.on('new message', newMessageRecieved => {
     var chat = newMessageRecieved.chat
     if (!chat.users) return console.log('chat.users not defined')
-    chat.users.forEach(user => {
-      if (user._id == newMessageRecieved.sender._id) return
+		// console.log({ userInfo: chat.users })
+    chat.users.forEach(userId => {
+      if (userId === newMessageRecieved.sender._id) return
+      console.log({ userId, chat })
+
 			// in: sends message to a room
-      socket.in(user._id).emit('message received', newMessageRecieved) // sending message to our personal room
+      socket
+				.in(chat._id)
+				.emit('message received', newMessageRecieved) // sending message to our personal room
+			// socket.in(userId).emit('message received', newMessageRecieved) // sending message to our personal room
+			// console.log({
+			//   user: userId,
+			//   sender: newMessageRecieved.sender._id,
+			//   newMessageRecieved
+			// })
     })
   })
 })

@@ -9,7 +9,6 @@ const ScrollableChat = ({ messages }) => {
 
   return (
     <ScrollableFeed>
-      {console.log({ messages })}
       {messages.map((message, index) => (
         <div
           key={message._id}
