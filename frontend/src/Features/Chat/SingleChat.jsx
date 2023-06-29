@@ -9,6 +9,9 @@ import ProfileModal from '../UserAvatar/ProfileModal';
 import UpdateGroupChatModal from './UpdateGroupChatModal';
 import ScrollableChat from './ScrollableChat';
 import { socket } from './config/socket-connection';
+import typingAnimation from '../../assets/hands-typing-on-keyboard.json';
+
+import Lottie from 'react-lottie';
 
 let selectedChatCompare;
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
@@ -16,18 +19,31 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [socketConnected, setSocketConnected] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [typing, setTyping] = useState(false);
   const { selectedChat, setSelectedChat, user, chats, setChats } = ChatState();
   const toast = useToast();
+
+  const lottieAnimationConfig = {
+    loop: true,
+    autoplay: true,
+    animationData: typingAnimation,
+    rendererSettings: {
+      preserveAspectRatio: 'xMidYMid slice',
+    },
+  };
 
   useEffect(() => {
     // initial connections
     socket.emit('setup', user);
     console.log('socket connected');
 
-    socket.on('connection', () => {
+    socket.on('connected', () => {
       setSocketConnected(true);
     });
     socket.on('message received', handleNewMessage);
+    socket.on('typing', () => setIsTyping(true));
+    socket.on('stop typing', () => setIsTyping(false));
 
     return () => {
       socket.disconnect();
@@ -40,7 +56,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   }, [selectedChat]);
 
   const handleNewMessage = (newMessageReceived) => {
-    console.log({ newMessageReceived });
+    // console.log({ newMessageReceived });
     if (
       !selectedChatCompare ||
       selectedChatCompare._id !== newMessageReceived.chat._id
@@ -54,6 +70,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   };
   const sendMessage = async (e) => {
     if (e.key === 'Enter') {
+      socket.emit('stop typing', selectedChat._id);
       if (newMessage.trim() === '') return;
 
       try {
@@ -94,6 +111,25 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const typingHandler = (e) => {
     setNewMessage(e.target.value);
     // TODO typing indecator logic
+    if (!socketConnected) return console.log('socket not connected');
+    if (!typing) {
+      setTyping(true);
+      socket.emit('typing', selectedChat._id);
+      console.log({ id: selectedChat._id });
+    }
+
+    // NOTE: Throttle Function
+    let lastTypingTime = new Date().getTime();
+    let timerLength = 3000;
+    setTimeout(() => {
+      let timeNow = new Date().getTime();
+      let timeDiff = timeNow - lastTypingTime;
+      if (timeDiff >= timerLength && typing) {
+        console.log({ chatId: selectedChat._id });
+        socket.emit('stop typing', selectedChat._id);
+        setTyping(false);
+      }
+    }, timerLength);
   };
   const fetchMessages = async () => {
     if (!selectedChat) return;
@@ -183,6 +219,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
               bg="#E8E8E8"
               w="97%"
               h="90%"
+              maxH={'90%'}
               borderRadius="lg"
               overflowY="hidden"
             >
@@ -196,13 +233,21 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                   margin={'auto'}
                 />
               ) : (
-                <div className="messages">
-                  <ScrollableChat messages={messages} />
-                </div>
+                <ScrollableChat messages={messages} />
               )}
 
               {/* messages */}
-              <FormControl onKeyUp={sendMessage} isRequired mt={3}>
+              <FormControl onKeyDown={sendMessage} isRequired mt={3}>
+                {isTyping ? (
+                  <Lottie
+                    options={lottieAnimationConfig}
+                    width={50}
+                    height={35}
+                    style={{ marginLeft: '10px', borderRadius: '50%' }}
+                  />
+                ) : (
+                  <div style={{ height: '10px' }}> </div>
+                )}
                 <Input
                   variant={'filled'}
                   bg={'#E0E0E0'}

@@ -21,11 +21,14 @@
   }
 }
 ::-webkit-scrollbar {
-  width: 0px;
+  width: 8px;
+  background-color: rgba(0, 0, 0, 0.014);
 }
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(136, 136, 136, 0.281);
+  background-color: #5555556b;
+  border-radius: 9999px;
+  min-height: 20px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #034861;
 }

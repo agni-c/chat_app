@@ -99,4 +99,13 @@ io.on('connection', socket => {
 			// })
     })
   })
+
+  socket.on('typing', room => {
+    console.log(`typing in room ${room}`)
+    socket.in(room).emit('typing')
+  })
+  socket.on('stop typing', room => {
+    console.log('stop typing')
+    socket.in(room).emit('stop typing')
+  })
 })
