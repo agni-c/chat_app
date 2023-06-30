@@ -21,7 +21,15 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [socketConnected, setSocketConnected] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [typing, setTyping] = useState(false);
-  const { selectedChat, setSelectedChat, user, chats, setChats } = ChatState();
+  const {
+    selectedChat,
+    setSelectedChat,
+    user,
+    chats,
+    setChats,
+    notification,
+    setNotification,
+  } = ChatState();
   const toast = useToast();
 
   const lottieAnimationConfig = {
@@ -56,14 +64,21 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   }, [selectedChat]);
 
   const handleNewMessage = (newMessageReceived) => {
-    // console.log({ newMessageReceived });
+    console.log({ selectedChatCompare, newMessageReceived });
+
     if (
       !selectedChatCompare ||
       selectedChatCompare._id !== newMessageReceived.chat._id
     ) {
-      // give notification
       console.log('new message received but not in this chat');
-      console.log({ selectedChatCompare, selectedChat });
+      // give notification
+      if (!notification.includes(newMessageReceived)) {
+        setNotification((notificationList) => [
+          ...notificationList,
+          newMessageReceived,
+        ]);
+        setFetchAgain(!fetchAgain);
+      }
     } else {
       setMessages((messages) => [...messages, newMessageReceived]);
     }

@@ -32,6 +32,9 @@ dependencies:
   react-lottie:
     specifier: ^1.2.3
     version: 1.2.3(react@18.2.0)
+  react-notification-badge:
+    specifier: ^1.5.1
+    version: 1.5.1(prop-types@15.8.1)(react-dom@18.2.0)(react@18.2.0)
   react-router-dom:
     specifier: ^5.3.4
     version: 5.3.4(react@18.2.0)
@@ -1948,6 +1951,11 @@ packages:
     requiresBuild: true
     dev: false
 
+  /core-js@3.31.0:
+    resolution: {integrity: sha512-NIp2TQSGfR6ba5aalZD+ZQ1fSxGhDo/s1w0nx3RYzf2pnJxt7YynxFlFScP6eV7+GZsKO95NSjGxyJsU3DZgeQ==}
+    requiresBuild: true
+    dev: false
+
   /cosmiconfig@7.1.0:
     resolution: {integrity: sha512-AdmX6xUzdNASswsFtmwSt7Vj8po9IuqXm0UXz7QKPuEUmPB4XyjGfaAr2PSuELMwkRMVH1EpIkX5bTZGRB3eCA==}
     engines: {node: '>=10'}
@@ -2379,6 +2387,19 @@ packages:
       babel-runtime: 6.26.0
       lottie-web: 5.12.2
       react: 18.2.0
+    dev: false
+
+  /react-notification-badge@1.5.1(prop-types@15.8.1)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-4/kFrQcJ7eMfYh9SdXXgBaaEDCIV7UsLX5bgSS1aj+OnX2OpIFTatY3Dclo8qLpkX+Ue6x0Aiib+U9dkDKrSwQ==}
+    peerDependencies:
+      prop-types: ^15.7.2
+      react: ^16.8.6
+      react-dom: ^16.8.6
+    dependencies:
+      core-js: 3.31.0
+      prop-types: 15.8.1
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
     dev: false
 
   /react-refresh@0.14.0:
